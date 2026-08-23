@@ -26,11 +26,49 @@ header h1 {
 }
 
 #room-name {
-  margin: 0;
+  margin: 0 0 0.5rem;
   color: #a8a29a;
   letter-spacing: 0.05em;
   text-transform: uppercase;
   font-size: 0.8rem;
+}
+
+#notebook-toggle {
+  padding: 0.3rem 0.8rem;
+  font-size: 0.75rem;
+}
+
+#notebook {
+  display: flex;
+  gap: 1.5rem;
+  border: 1px solid #3a3a42;
+  border-radius: 4px;
+  padding: 1rem;
+  background: #1f1f24;
+}
+
+#notebook section {
+  flex: 1;
+}
+
+#notebook h2 {
+  margin: 0 0 0.5rem;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #a8a29a;
+}
+
+#notebook ul {
+  margin: 0;
+  padding-left: 1.2rem;
+}
+
+#notebook li.empty {
+  list-style: none;
+  padding-left: 0;
+  color: #6b6b73;
+  font-style: italic;
 }
 
 #log {

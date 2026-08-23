@@ -10,7 +10,18 @@
     <header>
       <h1>Text Adventure Mystery</h1>
       <p id="room-name"></p>
+      <button id="notebook-toggle" type="button">Notebook</button>
     </header>
+    <aside id="notebook" hidden>
+      <section>
+        <h2>Places visited</h2>
+        <ul id="notebook-visited"></ul>
+      </section>
+      <section>
+        <h2>Items collected</h2>
+        <ul id="notebook-inventory"></ul>
+      </section>
+    </aside>
     <div id="log"></div>
     <form id="input-row">
       <input id="input" type="text" autocomplete="off" placeholder="What do you do?" />

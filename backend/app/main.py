@@ -51,6 +51,23 @@ def try_move(save: Save, room: dict, target: str) -> str:
     return "You can't go that way."
 
 
+# Prepositions/articles stripped from the target so "look at window" and
+# "look window" (or "go to the hallway" and "go hallway") parse the same
+# without a hardcoded startswith() check per phrasing.
+FILLER_WORDS = {"to", "at", "around", "the", "a", "an", "in", "on", "toward", "towards", "of"}
+LOOK_VERBS = {"look", "examine", "inspect", "x"}
+GO_VERBS = {"go", "walk", "head", "move", "travel"}
+
+
+def parse_command(text: str):
+    words = text.split()
+    if not words:
+        return "", ""
+    verb, *rest = words
+    target = " ".join(w for w in rest if w not in FILLER_WORDS)
+    return verb, target
+
+
 def ensure_visited(db: Session, save: Save) -> None:
     already = (
         db.query(VisitedRoom)
@@ -61,17 +78,20 @@ def ensure_visited(db: Session, save: Save) -> None:
         db.add(VisitedRoom(save_id=save.id, room_id=save.current_room_id, first_visited_turn=save.turn_count))
 
 
-def places_message(db: Session, save: Save) -> str:
+def notebook_payload(db: Session, save: Save):
     visited = (
         db.query(VisitedRoom)
         .filter_by(save_id=save.id)
         .order_by(VisitedRoom.first_visited_turn)
         .all()
     )
-    names = [ROOMS[v.room_id]["name"] for v in visited]
-    if not names:
-        return "You haven't been anywhere yet."
-    return "You've been to: " + ", ".join(names) + "."
+    # "inventory" is always empty for now — no item system yet (see the TODOs
+    # in rooms.py/main.py). Shape is here so the frontend panel doesn't need
+    # to change once items exist, just populate this list for real.
+    return {
+        "visited": [ROOMS[v.room_id]["name"] for v in visited],
+        "inventory": [],
+    }
 
 
 class ActionRequest(BaseModel):
@@ -88,7 +108,11 @@ def get_state(db: Session = Depends(get_db)):
     save = get_or_create_dev_save(db)
     ensure_visited(db, save)
     db.commit()
-    return {"room": room_payload(save), "turn_count": save.turn_count}
+    return {
+        "room": room_payload(save),
+        "turn_count": save.turn_count,
+        "notebook": notebook_payload(db, save),
+    }
 
 
 @app.post("/api/game/action")
@@ -109,24 +133,22 @@ def post_action(body: ActionRequest, db: Session = Depends(get_db)):
     # scripted walkthrough overlay — "places"/"inventory" below and the meta
     # commands above are the fallback net, not the primary onboarding.
     #
-    # TODO: "examine <noun>"/"take <noun>" verbs, once rooms carry an items
-    # list (see the TODO in rooms.py). Scenery gets a flavor line back either
-    # way; only inventory-type items also move into save_inventory. Room
-    # descriptions already name things (desk, candle stub, ink pad) that
-    # currently do nothing if you try to interact with them.
-    if text in ("look", "look around"):
-        message = room["description"]
-    elif text.startswith("go "):
-        target = text[3:].strip()
-        if target.startswith("to "):
-            target = target[3:].strip()
-        message = try_move(save, room, target)
+    # TODO: "examine <noun>" already gets a stub response below; "take <noun>"
+    # still doesn't exist. Both need rooms to carry an items list (see the TODO
+    # in rooms.py) before they can say anything real — right now "examine desk"
+    # is indistinguishable from "examine nonsense".
+    verb, target = parse_command(text)
+
+    if verb in LOOK_VERBS:
+        message = room["description"] if not target else f"You don't see anything special about the {target}."
+    elif verb in GO_VERBS:
+        message = try_move(save, room, target) if target else "Go where?"
     elif text in room["exits"]:
         message = try_move(save, room, text)
-    elif text in ("places", "visited", "where have i been"):
-        message = places_message(db, save)
-    elif text in ("inventory", "inv", "i"):
-        message = "You aren't carrying anything yet."
+    elif text in ("places", "visited", "where have i been", "inventory", "inv", "i"):
+        # These used to be typed commands returning a text listing; that's now
+        # the notebook panel (always visible, not something you ask for).
+        message = "Check your notebook — it's got a running list of that."
     else:
         message = "You're not sure how to do that yet."
 
@@ -135,7 +157,12 @@ def post_action(body: ActionRequest, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(save)
 
-    return {"message": message, "room": room_payload(save), "turn_count": save.turn_count}
+    return {
+        "message": message,
+        "room": room_payload(save),
+        "turn_count": save.turn_count,
+        "notebook": notebook_payload(db, save),
+    }
 
 
 app.mount("/", StaticFiles(directory=FRONTEND_DIR, html=True), name="frontend")
