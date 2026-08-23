@@ -3,7 +3,6 @@ const form = document.getElementById("input-row");
 const input = document.getElementById("input");
 const roomName = document.getElementById("room-name");
 const notebook = document.getElementById("notebook");
-const notebookToggle = document.getElementById("notebook-toggle");
 const notebookVisited = document.getElementById("notebook-visited");
 const notebookInventory = document.getElementById("notebook-inventory");
 
@@ -52,6 +51,9 @@ async function sendAction(text) {
   const state = await res.json();
   renderState(state);
   appendLine(state.message);
+  if (state.toggle_notebook) {
+    notebook.hidden = !notebook.hidden;
+  }
   // TODO: once item pickup exists (plans/SAVE_LOAD_PLAN.md save_inventory),
   // flash a small 8-bit-style sprite/animation here as a "check your notebook"
   // hint — probably keyed off a flag the action response adds (e.g.
@@ -65,10 +67,6 @@ form.addEventListener("submit", (event) => {
   appendLine(`> ${text}`);
   input.value = "";
   sendAction(text);
-});
-
-notebookToggle.addEventListener("click", () => {
-  notebook.hidden = !notebook.hidden;
 });
 
 loadState();

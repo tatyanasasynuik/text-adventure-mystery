@@ -33,11 +33,6 @@ header h1 {
   font-size: 0.8rem;
 }
 
-#notebook-toggle {
-  padding: 0.3rem 0.8rem;
-  font-size: 0.75rem;
-}
-
 #notebook {
   display: flex;
   gap: 1.5rem;
@@ -45,6 +40,13 @@ header h1 {
   border-radius: 4px;
   padding: 1rem;
   background: #1f1f24;
+}
+
+/* An unqualified #notebook{display:flex} outranks the UA [hidden]{display:none}
+   rule, so the "hidden" attribute alone doesn't hide it once we're toggling it
+   dynamically — pin it down explicitly. */
+#notebook[hidden] {
+  display: none;
 }
 
 #notebook section {

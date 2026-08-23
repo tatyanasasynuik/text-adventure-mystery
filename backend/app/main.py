@@ -58,6 +58,20 @@ FILLER_WORDS = {"to", "at", "around", "the", "a", "an", "in", "on", "toward", "t
 LOOK_VERBS = {"look", "examine", "inspect", "x"}
 GO_VERBS = {"go", "walk", "head", "move", "travel"}
 
+# Typing any of these opens (or closes) the notebook panel — not a UI button,
+# so the player has to learn it exists by trying it, same as any other verb.
+NOTEBOOK_PHRASES = {
+    "notebook",
+    "places",
+    "visited",
+    "where have i been",
+    "items",
+    "item",
+    "inventory",
+    "inv",
+    "i",
+}
+
 
 def parse_command(text: str):
     words = text.split()
@@ -138,6 +152,7 @@ def post_action(body: ActionRequest, db: Session = Depends(get_db)):
     # in rooms.py) before they can say anything real — right now "examine desk"
     # is indistinguishable from "examine nonsense".
     verb, target = parse_command(text)
+    toggle_notebook = False
 
     if verb in LOOK_VERBS:
         message = room["description"] if not target else f"You don't see anything special about the {target}."
@@ -145,10 +160,11 @@ def post_action(body: ActionRequest, db: Session = Depends(get_db)):
         message = try_move(save, room, target) if target else "Go where?"
     elif text in room["exits"]:
         message = try_move(save, room, text)
-    elif text in ("places", "visited", "where have i been", "inventory", "inv", "i"):
-        # These used to be typed commands returning a text listing; that's now
-        # the notebook panel (always visible, not something you ask for).
-        message = "Check your notebook — it's got a running list of that."
+    elif text in NOTEBOOK_PHRASES:
+        # Discovered by typing, not a UI button — the panel itself just
+        # toggles client-side; the server doesn't track whether it's open.
+        message = "You flip open your notebook."
+        toggle_notebook = True
     else:
         message = "You're not sure how to do that yet."
 
@@ -162,6 +178,7 @@ def post_action(body: ActionRequest, db: Session = Depends(get_db)):
         "room": room_payload(save),
         "turn_count": save.turn_count,
         "notebook": notebook_payload(db, save),
+        "toggle_notebook": toggle_notebook,
     }
 
 
