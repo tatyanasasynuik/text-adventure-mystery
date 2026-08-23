@@ -73,6 +73,11 @@ def post_action(body: ActionRequest, db: Session = Depends(get_db)):
     room = ROOMS[save.current_room_id]
     text = body.input.strip().lower()
 
+    # TODO: meta commands the player will reach for — "what can I do", "where can
+    # I go", "help". "Where can I go" is just room["exits"].keys() rendered as a
+    # sentence, no new data needed. "What can I do" is less obvious once items
+    # exist (per plans/SAVE_LOAD_PLAN.md) — probably exits + inventory verbs, but
+    # worth deciding once there's an inventory to list.
     if text in ("look", "look around"):
         message = room["description"]
     elif text.startswith("go "):

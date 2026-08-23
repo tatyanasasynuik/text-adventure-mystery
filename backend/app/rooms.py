@@ -2,6 +2,12 @@
 # Real content and the item/evidence chains live in
 # plans/initial/missing-from-the-study-decisions.md; this just gives the
 # turn loop somewhere to move around while the frontend gets built out.
+#
+# Layout is hub-and-spoke rather than a straight chain: Hallway connects
+# Study and Library, with Stairs bridging down to Kitchen/Garden. This also
+# gives the future Cellar (see the "Room mapping" open decision in
+# missing-from-the-study-decisions.md) a natural place to extend from —
+# continuing down past Stairs into Kitchen.
 
 STARTING_ROOM = "study"
 
@@ -12,7 +18,16 @@ ROOMS = {
             "Firelight flickers over rows of leather-bound books. A pale "
             "rectangle on the wall marks where a painting used to hang."
         ),
-        "exits": {"library": "library"},
+        "exits": {"hallway": "hallway"},
+    },
+    "hallway": {
+        "name": "Hallway",
+        "description": (
+            "A long hallway runs the length of the house, its runner rug "
+            "muffling footsteps. A narrow staircase descends near the far "
+            "end, and doors lead off toward the Study and the Library."
+        ),
+        "exits": {"study": "study", "library": "library", "stairs": "stairs"},
     },
     "library": {
         "name": "Library",
@@ -20,7 +35,16 @@ ROOMS = {
             "Dust motes drift in the lamplight. Someone has been through "
             "these shelves recently — a few books sit slightly askew."
         ),
-        "exits": {"study": "study", "kitchen": "kitchen"},
+        "exits": {"hallway": "hallway"},
+    },
+    "stairs": {
+        "name": "Stairs",
+        "description": (
+            "The staircase turns twice on its way down, its banister worn "
+            "smooth by generations of hands. Cooking smells drift up from "
+            "below, growing stronger with every step."
+        ),
+        "exits": {"hallway": "hallway", "kitchen": "kitchen"},
     },
     "kitchen": {
         "name": "Kitchen",
@@ -28,7 +52,7 @@ ROOMS = {
             "Copper pots hang above a cooling stove. A door to the garden "
             "stands slightly ajar, letting in the smell of rain."
         ),
-        "exits": {"library": "library", "garden": "garden"},
+        "exits": {"stairs": "stairs", "garden": "garden"},
     },
     "garden": {
         "name": "Garden",
