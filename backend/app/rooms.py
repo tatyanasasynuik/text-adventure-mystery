@@ -61,8 +61,9 @@ ROOMS = {
     "garden": {
         "name": "Garden",
         "description": (
-            "Rain has flattened the beds. Near the shed, a window pane lies "
-            "in pieces on the ground."
+            "Rain has flattened the beds. A scatter of glass glints in the "
+            "grass below the Study's cracked window, and the shed door hangs "
+            "half open at the far end of the path."
         ),
         "exits": {"kitchen": "kitchen"},
     },
