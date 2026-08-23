@@ -49,7 +49,7 @@ header h1 {
 
 #log p.command {
   font-family: "Courier New", Courier, monospace;
-  color: #7fd1c3;
+  color: #ff8c00; /* darkorange — ~6.7:1 contrast on #232329, clears WCAG AA */
 }
 
 #input-row {
