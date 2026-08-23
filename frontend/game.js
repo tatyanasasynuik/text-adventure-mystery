@@ -3,9 +3,10 @@ const form = document.getElementById("input-row");
 const input = document.getElementById("input");
 const roomName = document.getElementById("room-name");
 
-function appendLine(text) {
+function appendLine(text, className) {
   const p = document.createElement("p");
   p.textContent = text;
+  if (className) p.className = className;
   log.appendChild(p);
   log.scrollTop = log.scrollHeight;
 }
@@ -40,7 +41,7 @@ form.addEventListener("submit", (event) => {
   event.preventDefault();
   const text = input.value.trim();
   if (!text) return;
-  appendLine(`> ${text}`);
+  appendLine(`> ${text}`, "command");
   input.value = "";
   sendAction(text);
 });

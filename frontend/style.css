@@ -47,6 +47,11 @@ header h1 {
   margin: 0 0 0.75rem;
 }
 
+#log p.command {
+  font-family: "Courier New", Courier, monospace;
+  color: #7fd1c3;
+}
+
 #input-row {
   display: flex;
   gap: 0.5rem;
