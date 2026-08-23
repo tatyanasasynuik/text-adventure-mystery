@@ -30,6 +30,10 @@ async function sendAction(text) {
   const state = await res.json();
   renderState(state);
   appendLine(state.message);
+  // TODO: once item pickup exists (plans/SAVE_LOAD_PLAN.md save_inventory),
+  // flash a small 8-bit-style sprite/animation here as a "check your inventory"
+  // hint — probably keyed off a flag the action response adds (e.g.
+  // state.item_acquired) rather than parsing the message text.
 }
 
 form.addEventListener("submit", (event) => {

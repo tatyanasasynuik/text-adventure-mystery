@@ -16,7 +16,11 @@ ROOMS = {
         "name": "Study",
         "description": (
             "Firelight flickers over rows of leather-bound books. A pale "
-            "rectangle on the wall marks where a painting used to hang."
+            "rectangle on the wall marks where a painting used to hang. Near "
+            "a cracked windowpane — a few shards still clinging to the frame "
+            "— a heavy oak desk holds a candle stub and a small ink pad among "
+            "scattered papers. Warm light spills from beneath a door leading "
+            "out to the hallway."
         ),
         "exits": {"hallway": "hallway"},
     },
