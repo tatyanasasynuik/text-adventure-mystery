@@ -33,40 +33,6 @@ header h1 {
   font-size: 0.8rem;
 }
 
-.panel {
-  border: 1px solid #3a3a42;
-  border-radius: 4px;
-  padding: 1rem;
-  background: #1f1f24;
-}
-
-/* An unqualified .panel{...} with no display:none outranks the UA
-   [hidden]{display:none} rule once a display is set on it at all, so the
-   "hidden" attribute alone won't hide a toggled panel — pin it explicitly. */
-.panel[hidden] {
-  display: none;
-}
-
-.panel h2 {
-  margin: 0 0 0.5rem;
-  font-size: 0.75rem;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  color: #a8a29a;
-}
-
-.panel ul {
-  margin: 0;
-  padding-left: 1.2rem;
-}
-
-.panel li.empty {
-  list-style: none;
-  padding-left: 0;
-  color: #6b6b73;
-  font-style: italic;
-}
-
 #log {
   height: 60vh;
   overflow-y: auto;

@@ -70,10 +70,10 @@ FILLER_WORDS = {"to", "at", "around", "the", "a", "an", "in", "on", "toward", "t
 LOOK_VERBS = {"look", "examine", "inspect", "x"}
 GO_VERBS = {"go", "walk", "head", "move", "travel"}
 
-# Two separate typed commands, each toggling its own panel — not a UI button,
-# so the player has to learn they exist by trying, same as any other verb.
-# "notebook" is the places-visited log; "items" is the (currently empty)
-# inventory. Deliberately not merged into one panel/command.
+# Two separate typed commands, each answered inline in the log — not a UI
+# element, so the player has to learn they exist by trying, same as any other
+# verb. "notebook" is the places-visited log; "items" is the (currently
+# empty) inventory. Deliberately not merged into one command.
 PLACES_PHRASES = {"notebook", "places", "visited", "where have i been"}
 ITEMS_PHRASES = {"items", "item", "inventory", "inv", "i"}
 
@@ -109,6 +109,18 @@ def visited_room_names(db: Session, save: Save):
     return [ROOMS[v.room_id]["name"] for v in visited]
 
 
+def places_summary(names) -> str:
+    if not names:
+        return "You haven't been anywhere yet."
+    return "You've been to: " + ", ".join(names) + "."
+
+
+def items_summary(names) -> str:
+    if not names:
+        return "You aren't carrying anything yet."
+    return "You're carrying: " + ", ".join(names) + "."
+
+
 class ActionRequest(BaseModel):
     input: str
 
@@ -123,12 +135,7 @@ def get_state(db: Session = Depends(get_db)):
     save = get_or_create_dev_save(db)
     ensure_visited(db, save)
     db.commit()
-    return {
-        "room": room_payload(save),
-        "turn_count": save.turn_count,
-        "visited": visited_room_names(db, save),
-        "inventory": [],  # no item system yet — see the TODOs in rooms.py/main.py
-    }
+    return {"room": room_payload(save), "turn_count": save.turn_count}
 
 
 @app.post("/api/game/action")
@@ -154,8 +161,6 @@ def post_action(body: ActionRequest, db: Session = Depends(get_db)):
     # in rooms.py) before they can say anything real — right now "examine desk"
     # is indistinguishable from "examine nonsense".
     verb, target = parse_command(text)
-    toggle_notebook = False
-    toggle_items = False
 
     if verb in LOOK_VERBS:
         message = room["description"] if not target else f"You don't see anything special about the {target}."
@@ -164,13 +169,9 @@ def post_action(body: ActionRequest, db: Session = Depends(get_db)):
     elif text in room["exits"]:
         message = move_with_narration(db, save, room, text)
     elif text in PLACES_PHRASES:
-        # Discovered by typing, not a UI button — the panel itself just
-        # toggles client-side; the server doesn't track whether it's open.
-        message = "You flip open your notebook."
-        toggle_notebook = True
+        message = "You flip open your notebook. " + places_summary(visited_room_names(db, save))
     elif text in ITEMS_PHRASES:
-        message = "You check your things."
-        toggle_items = True
+        message = "You check your things. " + items_summary([])  # inventory always empty for now
     else:
         message = "You're not sure how to do that yet."
 
@@ -179,15 +180,7 @@ def post_action(body: ActionRequest, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(save)
 
-    return {
-        "message": message,
-        "room": room_payload(save),
-        "turn_count": save.turn_count,
-        "visited": visited_room_names(db, save),
-        "inventory": [],  # no item system yet — see the TODOs in rooms.py/main.py
-        "toggle_notebook": toggle_notebook,
-        "toggle_items": toggle_items,
-    }
+    return {"message": message, "room": room_payload(save), "turn_count": save.turn_count}
 
 
 app.mount("/", StaticFiles(directory=FRONTEND_DIR, html=True), name="frontend")
