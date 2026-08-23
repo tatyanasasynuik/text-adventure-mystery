@@ -51,6 +51,18 @@ def try_move(save: Save, room: dict, target: str) -> str:
     return "You can't go that way."
 
 
+def move_with_narration(db: Session, save: Save, room: dict, target: str) -> str:
+    # Study only ever leads to Hallway, and Hallway is unreachable any other
+    # way this early, so a first-ever arrival here always means "came from
+    # the Study" — a cheap, safe way to nudge the player toward the notebook
+    # existing at all, right as it becomes useful.
+    first_time_hallway = target == "hallway" and not has_visited(db, save, "hallway")
+    message = try_move(save, room, target)
+    if first_time_hallway and save.current_room_id == "hallway":
+        message += " You jot a quick note in your notebook: been in the Study."
+    return message
+
+
 # Prepositions/articles stripped from the target so "look at window" and
 # "look window" (or "go to the hallway" and "go hallway") parse the same
 # without a hardcoded startswith() check per phrasing.
@@ -58,19 +70,12 @@ FILLER_WORDS = {"to", "at", "around", "the", "a", "an", "in", "on", "toward", "t
 LOOK_VERBS = {"look", "examine", "inspect", "x"}
 GO_VERBS = {"go", "walk", "head", "move", "travel"}
 
-# Typing any of these opens (or closes) the notebook panel — not a UI button,
-# so the player has to learn it exists by trying it, same as any other verb.
-NOTEBOOK_PHRASES = {
-    "notebook",
-    "places",
-    "visited",
-    "where have i been",
-    "items",
-    "item",
-    "inventory",
-    "inv",
-    "i",
-}
+# Two separate typed commands, each toggling its own panel — not a UI button,
+# so the player has to learn they exist by trying, same as any other verb.
+# "notebook" is the places-visited log; "items" is the (currently empty)
+# inventory. Deliberately not merged into one panel/command.
+PLACES_PHRASES = {"notebook", "places", "visited", "where have i been"}
+ITEMS_PHRASES = {"items", "item", "inventory", "inv", "i"}
 
 
 def parse_command(text: str):
@@ -82,30 +87,26 @@ def parse_command(text: str):
     return verb, target
 
 
-def ensure_visited(db: Session, save: Save) -> None:
-    already = (
-        db.query(VisitedRoom)
-        .filter_by(save_id=save.id, room_id=save.current_room_id)
-        .first()
+def has_visited(db: Session, save: Save, room_id: str) -> bool:
+    return (
+        db.query(VisitedRoom).filter_by(save_id=save.id, room_id=room_id).first()
+        is not None
     )
-    if already is None:
+
+
+def ensure_visited(db: Session, save: Save) -> None:
+    if not has_visited(db, save, save.current_room_id):
         db.add(VisitedRoom(save_id=save.id, room_id=save.current_room_id, first_visited_turn=save.turn_count))
 
 
-def notebook_payload(db: Session, save: Save):
+def visited_room_names(db: Session, save: Save):
     visited = (
         db.query(VisitedRoom)
         .filter_by(save_id=save.id)
         .order_by(VisitedRoom.first_visited_turn)
         .all()
     )
-    # "inventory" is always empty for now — no item system yet (see the TODOs
-    # in rooms.py/main.py). Shape is here so the frontend panel doesn't need
-    # to change once items exist, just populate this list for real.
-    return {
-        "visited": [ROOMS[v.room_id]["name"] for v in visited],
-        "inventory": [],
-    }
+    return [ROOMS[v.room_id]["name"] for v in visited]
 
 
 class ActionRequest(BaseModel):
@@ -125,7 +126,8 @@ def get_state(db: Session = Depends(get_db)):
     return {
         "room": room_payload(save),
         "turn_count": save.turn_count,
-        "notebook": notebook_payload(db, save),
+        "visited": visited_room_names(db, save),
+        "inventory": [],  # no item system yet — see the TODOs in rooms.py/main.py
     }
 
 
@@ -153,18 +155,22 @@ def post_action(body: ActionRequest, db: Session = Depends(get_db)):
     # is indistinguishable from "examine nonsense".
     verb, target = parse_command(text)
     toggle_notebook = False
+    toggle_items = False
 
     if verb in LOOK_VERBS:
         message = room["description"] if not target else f"You don't see anything special about the {target}."
     elif verb in GO_VERBS:
-        message = try_move(save, room, target) if target else "Go where?"
+        message = move_with_narration(db, save, room, target) if target else "Go where?"
     elif text in room["exits"]:
-        message = try_move(save, room, text)
-    elif text in NOTEBOOK_PHRASES:
+        message = move_with_narration(db, save, room, text)
+    elif text in PLACES_PHRASES:
         # Discovered by typing, not a UI button — the panel itself just
         # toggles client-side; the server doesn't track whether it's open.
         message = "You flip open your notebook."
         toggle_notebook = True
+    elif text in ITEMS_PHRASES:
+        message = "You check your things."
+        toggle_items = True
     else:
         message = "You're not sure how to do that yet."
 
@@ -177,8 +183,10 @@ def post_action(body: ActionRequest, db: Session = Depends(get_db)):
         "message": message,
         "room": room_payload(save),
         "turn_count": save.turn_count,
-        "notebook": notebook_payload(db, save),
+        "visited": visited_room_names(db, save),
+        "inventory": [],  # no item system yet — see the TODOs in rooms.py/main.py
         "toggle_notebook": toggle_notebook,
+        "toggle_items": toggle_items,
     }
 
 

@@ -4,7 +4,8 @@ const input = document.getElementById("input");
 const roomName = document.getElementById("room-name");
 const notebook = document.getElementById("notebook");
 const notebookVisited = document.getElementById("notebook-visited");
-const notebookInventory = document.getElementById("notebook-inventory");
+const itemsPanel = document.getElementById("items");
+const itemsInventory = document.getElementById("items-inventory");
 
 function appendLine(text) {
   const p = document.createElement("p");
@@ -31,8 +32,8 @@ function renderList(el, items, emptyText) {
 
 function renderState(state) {
   roomName.textContent = state.room.name;
-  renderList(notebookVisited, state.notebook.visited, "Nowhere yet.");
-  renderList(notebookInventory, state.notebook.inventory, "Nothing yet.");
+  renderList(notebookVisited, state.visited, "Nowhere yet.");
+  renderList(itemsInventory, state.inventory, "Nothing yet.");
 }
 
 async function loadState() {
@@ -54,8 +55,11 @@ async function sendAction(text) {
   if (state.toggle_notebook) {
     notebook.hidden = !notebook.hidden;
   }
+  if (state.toggle_items) {
+    itemsPanel.hidden = !itemsPanel.hidden;
+  }
   // TODO: once item pickup exists (plans/SAVE_LOAD_PLAN.md save_inventory),
-  // flash a small 8-bit-style sprite/animation here as a "check your notebook"
+  // flash a small 8-bit-style sprite/animation here as a "check your items"
   // hint — probably keyed off a flag the action response adds (e.g.
   // state.item_acquired) rather than parsing the message text.
 }
