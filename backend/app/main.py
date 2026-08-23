@@ -6,13 +6,12 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
+from .config import DEV_USERNAME
 from .db import Base, engine, get_db
 from .models import Save, User, VisitedRoom
 from .rooms import ROOMS, STARTING_ROOM
 
 FRONTEND_DIR = Path(__file__).resolve().parent.parent.parent / "frontend"
-
-DEV_USERNAME = "dev"  # single stand-in player until real auth exists
 
 
 @asynccontextmanager
