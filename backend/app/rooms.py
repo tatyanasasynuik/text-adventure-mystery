@@ -8,6 +8,14 @@
 # gives the future Cellar (see the "Room mapping" open decision in
 # missing-from-the-study-decisions.md) a natural place to extend from —
 # continuing down past Stairs into Kitchen.
+#
+# TODO: room descriptions now name concrete objects (Study's desk/candle
+# stub/ink pad, the window shards) with nothing to interact with yet. Once
+# items exist, each room here will need an "items" list (or similar) driving
+# an "examine <noun>" verb in main.py — at minimum a flavor response for
+# scenery, "take <noun>" for anything that's actually inventory (per
+# save_inventory in plans/SAVE_LOAD_PLAN.md). Scenery vs. takeable is a real
+# per-item distinction, not just "everything is pickupable."
 
 STARTING_ROOM = "study"
 

@@ -108,10 +108,19 @@ def post_action(body: ActionRequest, db: Session = Depends(get_db)):
     # models "go hallway" in passing) rather than a "type HELP" banner or a
     # scripted walkthrough overlay — "places"/"inventory" below and the meta
     # commands above are the fallback net, not the primary onboarding.
+    #
+    # TODO: "examine <noun>"/"take <noun>" verbs, once rooms carry an items
+    # list (see the TODO in rooms.py). Scenery gets a flavor line back either
+    # way; only inventory-type items also move into save_inventory. Room
+    # descriptions already name things (desk, candle stub, ink pad) that
+    # currently do nothing if you try to interact with them.
     if text in ("look", "look around"):
         message = room["description"]
     elif text.startswith("go "):
-        message = try_move(save, room, text[3:].strip())
+        target = text[3:].strip()
+        if target.startswith("to "):
+            target = target[3:].strip()
+        message = try_move(save, room, target)
     elif text in room["exits"]:
         message = try_move(save, room, text)
     elif text in ("places", "visited", "where have i been"):
