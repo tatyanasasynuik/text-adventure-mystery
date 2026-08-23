@@ -36,3 +36,14 @@ class Save(Base):
     updated_at = Column(DateTime, default=utcnow, onupdate=utcnow)
 
     user = relationship("User", back_populates="save")
+
+
+class VisitedRoom(Base):
+    """Backs the "places" command. Not in the original SAVE_LOAD_PLAN schema —
+    added once it became clear players need a way to recall where they've been."""
+
+    __tablename__ = "visited_rooms"
+
+    save_id = Column(Integer, ForeignKey("saves.id"), primary_key=True)
+    room_id = Column(String, primary_key=True)
+    first_visited_turn = Column(Integer, nullable=False)
