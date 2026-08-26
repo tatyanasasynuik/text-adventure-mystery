@@ -132,11 +132,46 @@ ROOMS = {
     },
     "hallway": {
         "name": "Hallway",
-        "description": (
+        "description_parts": [
             "A long hallway runs the length of the house, its runner rug "
             "muffling footsteps. A narrow staircase descends near the far "
-            "end, and doors lead off toward the Study and the Library."
-        ),
+            "end, and doors lead off toward the Study and the Library.",
+            {
+                "base": "Just inside the door, a guestbook lies propped open on a "
+                "side table, a half-used matchbook resting beside it.",
+                "variants": [
+                    {
+                        "condition": {"held": "matchbook"},
+                        "text": "Just inside the door, a guestbook lies propped open "
+                        "alone on the side table now — the matchbook that sat "
+                        "beside it is already gone.",
+                    },
+                    {
+                        "condition": {"held": "party_guestbook"},
+                        "text": "Just inside the door, a half-used matchbook sits alone "
+                        "on the side table now — the guestbook that sat beside it "
+                        "is already gone.",
+                    },
+                    {
+                        "condition": {"held": ["matchbook", "party_guestbook"]},
+                        "text": "The side table by the door is bare now, both the "
+                        "guestbook and the matchbook already taken.",
+                    },
+                ],
+            },
+            {
+                "base": "Near the house phone, a cassette tape sits ejected from the "
+                "old intercom machine, labeled in faded pen with a date and time.",
+                "variants": [
+                    {
+                        "condition": {"held": "answering_machine_tape"},
+                        "text": "The old intercom machine by the house phone sits empty "
+                        "now — the cassette tape that was ejected from it is already "
+                        "gone.",
+                    },
+                ],
+            },
+        ],
         "exits": {"study": "study", "library": "library", "stairs": "stairs"},
         # "stairs" is the exit's canonical name, but nobody actually says
         # "go stairs" — they say "down" or "downstairs". Aliases resolve to
@@ -149,23 +184,24 @@ ROOMS = {
             "Dust motes drift in the lamplight. Someone has been through "
             "these shelves recently — a few books sit slightly askew.",
             {
-                "base": "On the reading table, a rolled floor plan sits beside an old "
-                "tape player, the kind that still takes cassettes.",
+                "base": "On the reading table, an old tape player sits, the kind that "
+                "still takes cassettes.",
                 "variants": [
                     {
-                        "condition": {"held": "blueprint_old"},
-                        "text": "On the reading table, an old tape player sits alone now — "
-                        "the rolled floor plan's already gone.",
-                    },
-                    {
                         "condition": {"held": "tape_player"},
-                        "text": "On the reading table, a rolled floor plan sits alone now — "
-                        "the tape player's already gone.",
+                        "text": "The reading table sits bare now — the tape player "
+                        "that sat on it is already gone.",
                     },
+                ],
+            },
+            {
+                "base": "Pinned to a corkboard by the door, a manual diagram shows the "
+                "dumbwaiter mechanism.",
+                "variants": [
                     {
-                        "condition": {"held": ["blueprint_old", "tape_player"]},
-                        "text": "The reading table sits bare now, the floor plan and tape "
-                        "player both already taken.",
+                        "condition": {"held": "dumbwaiter_diagram"},
+                        "text": "The corkboard by the door holds only a bare pin now — "
+                        "the diagram that hung there is already gone.",
                     },
                 ],
             },
@@ -201,11 +237,23 @@ ROOMS = {
     },
     "stairs": {
         "name": "Stairs",
-        "description": (
+        "description_parts": [
             "The staircase turns twice on its way down, its banister worn "
             "smooth by generations of hands. Cooking smells drift up from "
-            "below, growing stronger with every step."
-        ),
+            "below, growing stronger with every step.",
+            {
+                "base": "A candid Polaroid from the party is tucked into the edge "
+                "of a framed photo on the wall — a cluster of guests, mid-laugh, "
+                "someone's elbow in frame.",
+                "variants": [
+                    {
+                        "condition": {"held": "party_polaroid_group"},
+                        "text": "The framed photo on the wall stands alone now — the "
+                        "candid Polaroid tucked into its edge is already gone.",
+                    },
+                ],
+            },
+        ],
         "exits": {"hallway": "hallway", "kitchen": "kitchen"},
         "exit_aliases": {
             "up": "hallway", "upstairs": "hallway", "ascend": "hallway",
@@ -214,26 +262,15 @@ ROOMS = {
     },
     "kitchen": {
         "name": "Kitchen",
-        # EXPLORATION: eight items live in this one room, so unlike the
+        # EXPLORATION: several items live in this one room, so unlike the
         # Study's paired desk clause, most of these are their own
         # single-item clause rather than grouped — a compound "all taken"
         # variant only makes sense for items actually described together
-        # (the ledger and its tucked-in receipt), not for eight items that'd
-        # need 2^8 combinations spelled out. Each clause still swaps to a
-        # trace independently once its item's gone.
+        # (the ledger and its tucked-in receipt). Each clause still swaps to
+        # a trace independently once its item's gone.
         "description_parts": [
             "Copper pots hang above a cooling stove. A door to the garden "
             "stands slightly ajar, letting in the smell of rain.",
-            {
-                "base": "A half-used matchbook sits on the counter by the stove.",
-                "variants": [
-                    {
-                        "condition": {"held": "matchbook"},
-                        "text": "The counter by the stove is bare now — the matchbook "
-                        "that sat there is already gone.",
-                    },
-                ],
-            },
             {
                 "base": "A broom leans in the corner, its handle looking about the "
                 "right length and thickness for something.",
@@ -266,17 +303,6 @@ ROOMS = {
                 ],
             },
             {
-                "base": "A short note in a different hand is tucked nearby, someone "
-                "helping square the books.",
-                "variants": [
-                    {
-                        "condition": {"held": "ledger_reconciliation_note"},
-                        "text": "The spot near the ledger where a reconciliation note sat "
-                        "is empty now.",
-                    },
-                ],
-            },
-            {
                 "base": "A drink glass, half-full and still cold, sits on the counter.",
                 "variants": [
                     {
@@ -293,17 +319,6 @@ ROOMS = {
                         "condition": {"held": "kitchen_prep_schedule"},
                         "text": "A bare pin on the wall marks where the Cook's prep "
                         "schedule used to hang.",
-                    },
-                ],
-            },
-            {
-                "base": "Beside the dumbwaiter hatch, a pinned-up manual diagram "
-                "shows the mechanism.",
-                "variants": [
-                    {
-                        "condition": {"held": "dumbwaiter_diagram"},
-                        "text": "Beside the dumbwaiter hatch, only a bare pin remains — "
-                        "the diagram that hung there is already gone.",
                     },
                 ],
             },
@@ -346,11 +361,34 @@ ROOMS = {
     },
     "cellar": {
         "name": "Cellar",
-        "description": (
+        "description_parts": [
             "The air turns cool and mineral as you descend. Wine racks line "
             "one wall, thick with dust — except one, bricked up flush "
-            "against the stone behind it, its shelves conspicuously empty."
-        ),
+            "against the stone behind it, its shelves conspicuously empty.",
+            {
+                "base": "Wedged into a gap in the nearest wine rack, a short note in "
+                "a different hand sits half-hidden — someone helping square the "
+                "household books.",
+                "variants": [
+                    {
+                        "condition": {"held": "ledger_reconciliation_note"},
+                        "text": "That gap in the wine rack is empty now — the note "
+                        "wedged into it is already gone.",
+                    },
+                ],
+            },
+            {
+                "base": "Behind a stack of crates, a folded IOU note is tucked out of "
+                "sight — someone owes someone else, badly.",
+                "variants": [
+                    {
+                        "condition": {"held": "gambling_iou_note"},
+                        "text": "The gap behind the crates is empty now — the folded "
+                        "IOU note that was tucked there is already gone.",
+                    },
+                ],
+            },
+        ],
         "exits": {"kitchen": "kitchen"},
         "exit_aliases": {"up": "kitchen", "upstairs": "kitchen", "ascend": "kitchen"},
         "gated_exits": {
@@ -394,13 +432,26 @@ ROOMS = {
             "grass below the Study's cracked window, and the shed door hangs "
             "half open at the far end of the path.",
             {
-                "base": "Just inside the shed, a broken crank handle lies abandoned, "
-                "its shaft missing entirely.",
+                "base": "Just inside the shed, a rolled floor plan lies half-tucked "
+                "under a workbench, and a broken crank handle sits abandoned "
+                "nearby, its shaft missing entirely.",
                 "variants": [
                     {
+                        "condition": {"held": "blueprint_old"},
+                        "text": "Just inside the shed, a broken crank handle sits "
+                        "abandoned, its shaft missing entirely — the rolled floor "
+                        "plan that was tucked under the workbench is already gone.",
+                    },
+                    {
                         "condition": {"held": "crank_handle_broken"},
-                        "text": "The shed's mostly empty now — the broken crank handle "
-                        "that lay just inside is already gone.",
+                        "text": "Just inside the shed, a rolled floor plan lies "
+                        "half-tucked under a workbench — the broken crank handle "
+                        "that sat nearby is already gone.",
+                    },
+                    {
+                        "condition": {"held": ["blueprint_old", "crank_handle_broken"]},
+                        "text": "The shed's mostly empty now, both the floor plan and "
+                        "the broken crank handle already taken.",
                     },
                 ],
             },

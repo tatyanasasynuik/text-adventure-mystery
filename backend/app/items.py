@@ -38,11 +38,6 @@ ITEMS = {
         "description": "A shard of windowpane, sharp-edged, still clinging to the cracked frame.",
         "evidence_description": "A shard of windowpane. Under magnification the fracture lines fan outward from the outside face — this glass broke from an impact inside the room, not out.",
     },
-    "answering_machine_tape": {
-        "name": "answering machine tape",
-        "room": "study",
-        "description": "A cassette tape from the old house intercom, labeled in faded pen with a date and time.",
-    },
     "alibi_note": {
         "name": "alibi note",
         "room": "study",
@@ -54,36 +49,43 @@ ITEMS = {
         "room": "study",
         "description": "A partial print, barely visible in the dust on the empty frame's edge.",
     },
-    "party_guestbook": {
-        "name": "guestbook",
-        "room": "study",
-        "description": "The guestbook everyone signed on arrival, propped open near the door.",
-    },
-    "party_polaroid_group": {
-        "name": "group polaroid",
-        "aliases": ["polaroid", "candid polaroid"],
-        "room": "study",
-        "description": "A candid Polaroid from earlier in the party — a cluster of guests, mid-laugh, someone's elbow in frame.",
-        "evidence_description": "The candid Polaroid. Magnified, a blurred figure in the background is caught heading for the Kitchen/Cellar door — right around the time the Niece says she was on the phone.",
-    },
     "party_polaroid_dress": {
         "name": "dress polaroid",
         "aliases": ["polaroid of her dress", "dress photo"],
         "room": "study",
         "description": "A party-favor Polaroid of the Niece, showing off her dress in full for the camera — she'd had it out all night.",
     },
-    "gambling_iou_note": {
-        "name": "IOU note",
-        "room": "study",
-        "description": "A folded IOU, tucked where a coat was slung over a chair. Someone owes someone else, badly.",
+
+    # --- Hallway ---
+    # Entryway-adjacent finds — moved here from the Study/Kitchen so the
+    # Hallway isn't a pure pass-through room. See dynamic-descriptions-
+    # exploration's item-distribution follow-up.
+    "answering_machine_tape": {
+        "name": "answering machine tape",
+        "room": "hallway",
+        "description": "A cassette tape from the old house intercom, labeled in faded pen with a date and time.",
+    },
+    "party_guestbook": {
+        "name": "guestbook",
+        "room": "hallway",
+        "description": "The guestbook everyone signed on arrival, propped open near the door.",
+    },
+    "matchbook": {
+        "name": "matchbook",
+        "room": "hallway",
+        "description": "A half-used matchbook from a local restaurant.",
+    },
+
+    # --- Stairs ---
+    "party_polaroid_group": {
+        "name": "group polaroid",
+        "aliases": ["polaroid", "candid polaroid"],
+        "room": "stairs",
+        "description": "A candid Polaroid from earlier in the party — a cluster of guests, mid-laugh, someone's elbow in frame.",
+        "evidence_description": "The candid Polaroid. Magnified, a blurred figure in the background is caught heading for the Kitchen/Cellar door — right around the time the Niece says she was on the phone.",
     },
 
     # --- Library ---
-    "blueprint_old": {
-        "name": "old blueprint",
-        "room": "library",
-        "description": "A rolled floor plan, older than the current one on file. It shows more house than currently seems to exist.",
-    },
     "tape_player": {
         "name": "tape player",
         "room": "library",
@@ -99,17 +101,17 @@ ITEMS = {
         "room": "library",
         "description": "An old letter on a dealer's letterhead, referencing past offers to buy the missing painting — all declined.",
     },
+    "dumbwaiter_diagram": {
+        "name": "dumbwaiter diagram",
+        "room": "library",
+        "description": "A pinned-up manual diagram for the dumbwaiter mechanism.",
+    },
 
     # --- Kitchen ---
     "broom_handle": {
         "name": "broom handle",
         "room": "kitchen",
         "description": "A broom, its handle just about the right length and thickness for something.",
-    },
-    "matchbook": {
-        "name": "matchbook",
-        "room": "kitchen",
-        "description": "A half-used matchbook from a local restaurant.",
     },
     "petty_cash_ledger": {
         "name": "petty cash ledger",
@@ -131,15 +133,17 @@ ITEMS = {
         "room": "kitchen",
         "description": "The Cook's handwritten timing notes for the evening's courses.",
     },
-    "dumbwaiter_diagram": {
-        "name": "dumbwaiter diagram",
-        "room": "kitchen",
-        "description": "A pinned-up manual diagram for the dumbwaiter mechanism.",
-    },
+
+    # --- Cellar ---
     "ledger_reconciliation_note": {
         "name": "reconciliation note",
-        "room": "kitchen",
-        "description": "A short note tucked near the ledger, in a different hand — someone helping square the books.",
+        "room": "cellar",
+        "description": "A short note tucked out of sight, in a different hand — someone helping square the books.",
+    },
+    "gambling_iou_note": {
+        "name": "IOU note",
+        "room": "cellar",
+        "description": "A folded IOU, tucked out of sight down here. Someone owes someone else, badly.",
     },
 
     # --- Garden ---
@@ -152,6 +156,11 @@ ITEMS = {
         "name": "ornate key",
         "room": "garden",
         "description": "A small ornate key, buried under an overturned flowerpot.",
+    },
+    "blueprint_old": {
+        "name": "old blueprint",
+        "room": "garden",
+        "description": "A rolled floor plan, older than the current one on file. It shows more house than currently seems to exist.",
     },
 
     # --- Spawned only (produced by combos, not found in a room) ---
