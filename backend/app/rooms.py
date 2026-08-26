@@ -177,6 +177,20 @@ ROOMS = {
         # "go stairs" — they say "down" or "downstairs". Aliases resolve to
         # a real exits key in main.py before the exits lookup runs.
         "exit_aliases": {"downstairs": "stairs", "down": "stairs", "descend": "stairs"},
+        "scenery": {
+            # EXPLORATION: pure ambiance, not a chain — gives the Houseguest
+            # (in the cast table's "Expanded Cast" but with no item chain of
+            # her own) a physical trace in the house without inventing a
+            # resolution chain for a suspect who's barely in the story.
+            "glove": {
+                "text": (
+                    "A single glove, dropped and half-kicked under the runner rug. "
+                    "Not fine enough to be anyone's going-out pair — probably the "
+                    "plus-one who spent half the night lost looking for the bathroom."
+                ),
+                "aliases": ["dropped glove", "single glove"],
+            },
+        },
     },
     "library": {
         "name": "Library",
@@ -407,11 +421,19 @@ ROOMS = {
     },
     "tunnel": {
         "name": "Tunnel",
+        # EXPLORATION: "initials" and "tin" are pure ambiance — no combo, no
+        # evidence, nothing required reads their text. The Tunnel's on the
+        # required path (Chain A lights the candle and finds snagged_thread
+        # here), so it's a guaranteed audience for two lines establishing
+        # "this place is old and forgotten," not a lead to chase.
         "description": (
             "The passage beyond the wine rack is narrow and low, cut "
             "straight through old stone. Cold air moves through it from "
             "somewhere — one direction carries the smell of wet earth and "
-            "rain, the other a faint thread of warmth and firelight."
+            "rain, the other a faint thread of warmth and firelight. Here "
+            "and there the stone bears older marks — scratched initials "
+            "with a date long past, and something small and rusted wedged "
+            "into a crack near the floor."
         ),
         "exits": {"cellar": "cellar"},
         "exit_aliases": {"back": "cellar", "out": "cellar"},
@@ -423,6 +445,23 @@ ROOMS = {
                 ),
                 "aliases": ["wall", "tunnel wall", "stonework", "far end"],
             },
+            "initials": {
+                "text": (
+                    "A set of initials and a date, scratched into the stone at "
+                    "about waist height. The date's decades old — whoever left "
+                    "this passed through long before tonight, and never came "
+                    "back to add to it."
+                ),
+                "aliases": ["carving", "carved initials", "scratches", "marks", "date"],
+            },
+            "tin": {
+                "text": (
+                    "A small rusted tin, wedged into a crack near the floor, its "
+                    "lid long gone. Whatever it once held, someone left it here "
+                    "and forgot about it a long time ago."
+                ),
+                "aliases": ["rusted tin", "old tin", "can", "tin can"],
+            },
         },
     },
     "garden": {
@@ -430,7 +469,8 @@ ROOMS = {
         "description_parts": [
             "Rain has flattened the beds. A scatter of glass glints in the "
             "grass below the Study's cracked window, and the shed door hangs "
-            "half open at the far end of the path.",
+            "half open at the far end of the path, muddy boot prints crossing "
+            "back and forth near it.",
             {
                 "base": "Just inside the shed, a rolled floor plan lies half-tucked "
                 "under a workbench, and a broken crank handle sits abandoned "
@@ -480,6 +520,18 @@ ROOMS = {
             "flowerbed": {
                 "text": "The beds are flattened flat by the rain, nothing growing back yet.",
                 "aliases": ["beds", "flower beds"],
+            },
+            # EXPLORATION: pure ambiance, not a chain — reinforces the
+            # existing Gardener/window red herring (Chain D already clears
+            # the outside-break-in theory) without inventing a new combo.
+            "boot_prints": {
+                "text": (
+                    "A trail of muddy boot prints runs from the shed toward the "
+                    "fence and back again, going nowhere near the house. The "
+                    "Gardener's, probably, checking the beds before the rain "
+                    "really set in."
+                ),
+                "aliases": ["boot prints", "footprints", "muddy prints", "tracks"],
             },
         },
     },
