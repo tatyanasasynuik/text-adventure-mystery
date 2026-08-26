@@ -11,6 +11,7 @@ from .db import Base, engine, get_db
 from .items import COMBINATIONS, ITEMS
 from .models import Save, SaveEvidenceLog, SaveFlag, SaveInventory, SaveItemPromotion, User, VisitedRoom
 from .rooms import ROOMS, STARTING_ROOM
+from .state import has_flag, held_item_ids, is_evidence, layered_text, swap_text
 
 FRONTEND_DIR = Path(__file__).resolve().parent.parent.parent / "frontend"
 
@@ -39,9 +40,29 @@ def get_or_create_dev_save(db: Session) -> Save:
     return save
 
 
-def room_payload(save: Save):
+def room_description(db: Session, save: Save, room_id: str) -> str:
+    room = ROOMS[room_id]
+    # "description_parts" is the opt-in for a room that needs a clause
+    # rewritten in place (a swap) rather than only ever appended to (a
+    # layer) — e.g. the Study's desk clause naming exactly what's still on
+    # it, not "holds a candle stub" plus a footnote once it doesn't. Plain
+    # strings pass through unchanged; a {"base", "variants"} dict resolves
+    # like item_display_description's evidence_description swap does. Rooms
+    # that don't need this keep using a flat "description" string.
+    parts = room.get("description_parts")
+    if parts is not None:
+        base = " ".join(
+            swap_text(db, save, part["base"], part.get("variants", [])) if isinstance(part, dict) else part
+            for part in parts
+        )
+    else:
+        base = room["description"]
+    return layered_text(db, save, base, room.get("state_notes", []))
+
+
+def room_payload(db: Session, save: Save):
     room = ROOMS[save.current_room_id]
-    return {"name": room["name"], "description": room["description"]}
+    return {"name": room["name"], "description": room_description(db, save, save.current_room_id)}
 
 
 def try_move(db: Session, save: Save, room: dict, target: str) -> str:
@@ -49,14 +70,14 @@ def try_move(db: Session, save: Save, room: dict, target: str) -> str:
     if target in room["exits"]:
         save.current_room_id = room["exits"][target]
         new_room = ROOMS[save.current_room_id]
-        return f"You head to the {new_room['name']}. {new_room['description']}"
+        return f"You head to the {new_room['name']}. {room_description(db, save, save.current_room_id)}"
     gate = room.get("gated_exits", {}).get(target)
     if gate:
         if gate.get("requires_flag") and not has_flag(db, save, gate["requires_flag"]):
             return gate.get("blocked_message", "You can't go that way yet.")
         save.current_room_id = gate["target"]
         new_room = ROOMS[save.current_room_id]
-        return f"You head to the {new_room['name']}. {new_room['description']}"
+        return f"You head to the {new_room['name']}. {room_description(db, save, save.current_room_id)}"
     return "You can't go that way."
 
 
@@ -178,11 +199,6 @@ def match_scenery(target: str, scenery: dict) -> str | None:
     return None
 
 
-def held_item_ids(db: Session, save: Save) -> set[str]:
-    rows = db.query(SaveInventory).filter_by(save_id=save.id, status="held").all()
-    return {row.item_id for row in rows}
-
-
 def room_item_ids(db: Session, save: Save, room_id: str) -> set[str]:
     taken_or_gone = {
         row.item_id for row in db.query(SaveInventory).filter_by(save_id=save.id).all()
@@ -194,19 +210,17 @@ def room_item_ids(db: Session, save: Save, room_id: str) -> set[str]:
     }
 
 
-def has_flag(db: Session, save: Save, flag_key: str) -> bool:
-    return db.query(SaveFlag).filter_by(save_id=save.id, flag_key=flag_key).first() is not None
-
-
-def is_evidence(db: Session, save: Save, item_id: str) -> bool:
-    return db.query(SaveItemPromotion).filter_by(save_id=save.id, item_id=item_id).first() is not None
-
-
 def item_display_description(db: Session, save: Save, item_id: str) -> str:
+    # Generalized evidence_description: it's folded in here as an implicit
+    # last variant so existing items.py entries don't need editing, but any
+    # item can now also carry an explicit "state_descriptions" list (see
+    # fingerprint_lifted / timeline_note_kitchen in items.py) for swaps keyed
+    # on a flag rather than only "promoted to evidence".
     item = ITEMS[item_id]
-    if is_evidence(db, save, item_id) and "evidence_description" in item:
-        return item["evidence_description"]
-    return item["description"]
+    variants = list(item.get("state_descriptions", []))
+    if "evidence_description" in item:
+        variants.append({"condition": {"evidence": item_id}, "text": item["evidence_description"]})
+    return swap_text(db, save, item["description"], variants)
 
 
 def resolve_operand(name: str, db: Session, save: Save, room: dict) -> str | None:
@@ -240,7 +254,7 @@ def handle_take(db: Session, save: Save, room: dict, target: str) -> str:
 
 def handle_examine(db: Session, save: Save, room: dict, target: str) -> str:
     if not target:
-        return room["description"]
+        return room_description(db, save, save.current_room_id)
     item_id = match_item(target, held_item_ids(db, save)) or match_item(
         target, room_item_ids(db, save, save.current_room_id)
     )
@@ -249,7 +263,8 @@ def handle_examine(db: Session, save: Save, room: dict, target: str) -> str:
         return prefix + item_display_description(db, save, item_id)
     scenery_key = match_scenery(target, room.get("scenery", {}))
     if scenery_key:
-        return room["scenery"][scenery_key]["text"]
+        scenery = room["scenery"][scenery_key]
+        return swap_text(db, save, scenery["text"], scenery.get("state_descriptions", []))
     return f"You don't see anything special about the {target}."
 
 
@@ -369,7 +384,7 @@ def get_state(db: Session = Depends(get_db)):
     save = get_or_create_dev_save(db)
     ensure_visited(db, save)
     db.commit()
-    return {"room": room_payload(save), "turn_count": save.turn_count}
+    return {"room": room_payload(db, save), "turn_count": save.turn_count}
 
 
 @app.post("/api/game/action")
@@ -423,7 +438,7 @@ def post_action(body: ActionRequest, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(save)
 
-    return {"message": message, "room": room_payload(save), "turn_count": save.turn_count}
+    return {"message": message, "room": room_payload(db, save), "turn_count": save.turn_count}
 
 
 app.mount("/", StaticFiles(directory=FRONTEND_DIR, html=True), name="frontend")

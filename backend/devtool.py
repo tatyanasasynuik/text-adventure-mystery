@@ -7,7 +7,6 @@ app/. Run from anywhere:
     backend/.venv/Scripts/python.exe backend/devtool.py reset
     backend/.venv/Scripts/python.exe backend/devtool.py goto kitchen
     backend/.venv/Scripts/python.exe backend/devtool.py visit garden
-    backend/.venv/Scripts/python.exe backend/devtool.py set-turn 0
     backend/.venv/Scripts/python.exe backend/devtool.py wipe
 """
 
@@ -16,7 +15,7 @@ import sys
 
 from app.config import DEV_USERNAME
 from app.db import Base, SessionLocal, engine
-from app.models import Save, User, VisitedRoom
+from app.models import Save, SaveEvidenceLog, SaveFlag, SaveInventory, SaveItemPromotion, User, VisitedRoom
 from app.rooms import ROOMS, STARTING_ROOM
 
 
@@ -59,11 +58,15 @@ def cmd_show(db, args):
 def cmd_reset(db, args):
     save = require_dev_save(db)
     db.query(VisitedRoom).filter_by(save_id=save.id).delete()
+    db.query(SaveInventory).filter_by(save_id=save.id).delete()
+    db.query(SaveFlag).filter_by(save_id=save.id).delete()
+    db.query(SaveItemPromotion).filter_by(save_id=save.id).delete()
+    db.query(SaveEvidenceLog).filter_by(save_id=save.id).delete()
     save.current_room_id = STARTING_ROOM
     save.turn_count = 0
     save.status = "in_progress"
     db.commit()
-    print(f"Reset dev save to '{STARTING_ROOM}', turn 0.")
+    print(f"Reset dev save to '{STARTING_ROOM}', turn 0 (inventory, flags, promotions, and evidence log cleared).")
 
 
 def cmd_goto(db, args):
@@ -86,13 +89,6 @@ def cmd_visit(db, args):
         print(f"'{args.room}' was already marked visited.")
 
 
-def cmd_set_turn(db, args):
-    save = require_dev_save(db)
-    save.turn_count = args.n
-    db.commit()
-    print(f"turn_count set to {args.n}.")
-
-
 def cmd_wipe(db, args):
     db.query(VisitedRoom).delete()
     db.query(Save).delete()
@@ -106,7 +102,6 @@ COMMANDS = {
     "reset": cmd_reset,
     "goto": cmd_goto,
     "visit": cmd_visit,
-    "set-turn": cmd_set_turn,
     "wipe": cmd_wipe,
 }
 
@@ -123,9 +118,6 @@ def main():
 
     visit = sub.add_parser("visit", help="Mark a room visited without moving there.")
     visit.add_argument("room")
-
-    set_turn = sub.add_parser("set-turn", help="Set turn_count directly.")
-    set_turn.add_argument("n", type=int)
 
     sub.add_parser("wipe", help="Delete every row (users, saves, visited_rooms).")
 

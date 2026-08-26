@@ -186,11 +186,34 @@ ITEMS = {
         "name": "lifted fingerprint",
         "room": None,
         "description": "The partial print, lifted cleanly with the ink pad. Ready to compare against something.",
+        # EXPLORATION: state_descriptions swap the examine text once a flag
+        # fires, same convention items.py already used for
+        # evidence_description but generalized to any flag, not just
+        # "promoted to evidence" — see state.py.
+        "state_descriptions": [
+            {
+                "condition": {"flag": "fingerprint_matched_friend"},
+                "text": (
+                    "The partial print, lifted cleanly with the ink pad — already "
+                    "matched against the guestbook. It's the Family Friend's."
+                ),
+            },
+        ],
     },
     "timeline_note_kitchen": {
         "name": "kitchen timeline note",
         "room": None,
         "description": "A quick cross-check of the drink's temperature against the Cook's prep schedule — whoever poured this has been gone a while.",
+        "state_descriptions": [
+            {
+                "condition": {"flag": "son_timeline_mismatch"},
+                "text": (
+                    "A quick cross-check of the drink's temperature against the Cook's "
+                    "prep schedule — already checked against the Son's claimed \"just got "
+                    "a drink,\" and the gap's too long for that alone."
+                ),
+            },
+        ],
     },
 }
 
