@@ -1,4 +1,4 @@
-# Text Adventure Mystery
+# This Late Hour
 
 A login-gated, text-based mystery/logic-puzzle game — built as a learning project covering auth, databases, cookies, and self-hosted deployment.
 

@@ -1,4 +1,12 @@
 # Stub room content for UX iteration — not the real case yet.
+#
+# TODO: the game's title is "This Late Hour" (see the Study's opening line
+# below for the first callback). Look for a couple more natural spots to
+# echo it as real room/ending content goes in — e.g. a late-night detail in
+# the Library or Garden, or the accusation/ending scene once that exists.
+# Don't force it into every room; one or two more call-backs is the goal,
+# not a repeated tagline.
+#
 # Real content and the item/evidence chains live in
 # plans/initial/missing-from-the-study-decisions.md; the takeable items
 # themselves are content, not this file's problem — see items.py.
@@ -38,7 +46,8 @@ ROOMS = {
     "study": {
         "name": "Study",
         "description": (
-            "Firelight flickers over rows of leather-bound books. A pale "
+            "Firelight flickers over rows of leather-bound books — this late "
+            "hour, the rest of the house should be asleep. A pale "
             "rectangle on the wall marks where a painting used to hang. Near "
             "a cracked windowpane — a few shards still clinging to the frame "
             "— a heavy oak desk holds a candle stub and a small ink pad among "
