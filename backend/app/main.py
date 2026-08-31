@@ -6,7 +6,8 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
-from .config import DEV_USERNAME
+from .ascii_art import CELLAR_ASCII_ART
+from .config import DEV_USERNAME, SHOW_CREDITS_COMMAND
 from .db import Base, engine, get_db
 from .items import COMBINATIONS, ITEMS
 from .models import Save, SaveEvidenceLog, SaveFlag, SaveInventory, SaveItemPromotion, User, VisitedRoom
@@ -92,6 +93,12 @@ COMBINE_CONNECTORS = {"with", "and", "on"}
 PLACES_PHRASES = {"notebook", "places", "visited", "where have i been"}
 ITEMS_PHRASES = {"items", "item", "inventory", "inv", "i"}
 EVIDENCE_PHRASES = {"evidence", "clues", "case file", "casefile"}
+
+# Easter egg, not core to the case — an ASCII rendering of the Cellar shown
+# as a "credits" screen. Still being play-tested as a typed command; gated
+# by SHOW_CREDITS_COMMAND in config.py so it can be pulled without touching
+# this handler. See ascii_art.py for the (currently stubbed) art itself.
+CREDITS_PHRASES = {"credits"}
 
 
 def parse_command(text: str):
@@ -415,6 +422,8 @@ def post_action(body: ActionRequest, db: Session = Depends(get_db)):
             message = "You check your things. " + items_summary(db, save)
         elif text in EVIDENCE_PHRASES:
             message = evidence_summary(db, save)
+        elif SHOW_CREDITS_COMMAND and text in CREDITS_PHRASES:
+            message = CELLAR_ASCII_ART
         else:
             message = "You're not sure how to do that yet."
 
