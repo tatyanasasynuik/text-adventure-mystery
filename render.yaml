@@ -1,0 +1,11 @@
+services:
+  - name: this-late-hour
+    type: web
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: free
+    region: oregon
+    healthCheckPath: /
+    envVars:
+      - key: DATABASE_URL
+        sync: false

@@ -1,0 +1,17 @@
+# Generated as a starting scaffold — run `fly launch` to create/register the
+# real app on your Fly account, which will confirm or rewrite these values
+# (app name must be globally unique, region should match `fly platform regions`).
+app = "this-late-hour"
+primary_region = "iad"
+
+[build]
+
+[http_service]
+  internal_port = 8000
+  force_https = true
+  auto_stop_machines = true
+  auto_start_machines = true
+  min_machines_running = 0
+
+[[vm]]
+  size = "shared-cpu-1x"

@@ -1,0 +1,16 @@
+.git
+.claude
+docs
+plans
+
+backend/.venv
+backend/__pycache__
+backend/app/__pycache__
+backend/dev.sqlite3
+**/__pycache__
+**/*.pyc
+
+.vscode
+.idea
+.DS_Store
+Thumbs.db
