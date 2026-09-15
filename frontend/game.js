@@ -3,15 +3,41 @@ const form = document.getElementById("input-row");
 const input = document.getElementById("input");
 const roomName = document.getElementById("room-name");
 
-function appendLine(text, className) {
+let currentRoomName = "";
+
+function escapeHtml(text) {
+  const div = document.createElement("div");
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+// Each kind gets its own glyph, not just a color, so the cue still reads
+// without relying on color perception.
+const HIGHLIGHT_GLYPH = { take: "+", combine: "»", evidence: "★" };
+
+function appendLine(roomLabel, text, { className, highlight } = {}) {
   const p = document.createElement("p");
-  p.textContent = text;
   if (className) p.className = className;
+  p.innerHTML =
+    `<span class="room-tag">${escapeHtml(roomLabel)}</span>` +
+    `<span class="sep"> | </span>` +
+    `<span class="log-text">${escapeHtml(text)}</span>`;
   log.appendChild(p);
+
+  if (highlight) {
+    const badge = document.createElement("p");
+    badge.className = `event-badge kind-${highlight.kind}`;
+    const glyph = HIGHLIGHT_GLYPH[highlight.kind] || "+";
+    const label = highlight.kind === "evidence" ? "Evidence: " : "";
+    badge.textContent = `${glyph} ${label}${highlight.text}`;
+    log.appendChild(badge);
+  }
+
   log.scrollTop = log.scrollHeight;
 }
 
 function renderState(state) {
+  currentRoomName = state.room.name;
   roomName.textContent = state.room.name;
 }
 
@@ -19,10 +45,11 @@ async function loadState() {
   const res = await fetch("/api/game/state");
   const state = await res.json();
   renderState(state);
-  appendLine(state.room.description);
+  appendLine(currentRoomName, state.room.description);
 }
 
 async function sendAction(text) {
+  appendLine(currentRoomName, `> ${text}`, { className: "command" });
   const res = await fetch("/api/game/action", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -30,18 +57,13 @@ async function sendAction(text) {
   });
   const state = await res.json();
   renderState(state);
-  appendLine(state.message);
-  // TODO: once item pickup exists (plans/SAVE_LOAD_PLAN.md save_inventory),
-  // flash a small 8-bit-style sprite/animation here as a "check your items"
-  // hint — probably keyed off a flag the action response adds (e.g.
-  // state.item_acquired) rather than parsing the message text.
+  appendLine(currentRoomName, state.message, { highlight: state.highlight });
 }
 
 form.addEventListener("submit", (event) => {
   event.preventDefault();
   const text = input.value.trim();
   if (!text) return;
-  appendLine(`> ${text}`, "command");
   input.value = "";
   sendAction(text);
 });

@@ -230,19 +230,20 @@ def resolve_operand(name: str, db: Session, save: Save, room: dict) -> str | Non
     return None
 
 
-def handle_take(db: Session, save: Save, room: dict, target: str) -> str:
+def handle_take(db: Session, save: Save, room: dict, target: str) -> tuple[str, dict | None]:
     if not target:
-        return "Take what?"
+        return "Take what?", None
     room_ids = room_item_ids(db, save, save.current_room_id)
     item_id = match_item(target, room_ids)
     if item_id:
         db.add(SaveInventory(save_id=save.id, item_id=item_id, status="held", acquired_at_turn=save.turn_count))
-        return f"You take the {ITEMS[item_id]['name']}."
+        name = ITEMS[item_id]["name"]
+        return f"You take the {name}.", {"kind": "take", "text": name}
     if match_item(target, held_item_ids(db, save)):
-        return "You're already carrying that."
+        return "You're already carrying that.", None
     if match_scenery(target, room.get("scenery", {})):
-        return "That's not something you can carry."
-    return "You don't see that here."
+        return "That's not something you can carry.", None
+    return "You don't see that here.", None
 
 
 def handle_examine(db: Session, save: Save, room: dict, target: str) -> str:
@@ -260,22 +261,22 @@ def handle_examine(db: Session, save: Save, room: dict, target: str) -> str:
     return f"You don't see anything special about the {target}."
 
 
-def handle_combine(db: Session, save: Save, room: dict, rest_words) -> str:
+def handle_combine(db: Session, save: Save, room: dict, rest_words) -> tuple[str, dict | None]:
     parsed = parse_combine(rest_words)
     if not parsed:
-        return "Combine what with what?"
+        return "Combine what with what?", None
     left_op = resolve_operand(parsed[0], db, save, room)
     right_op = resolve_operand(parsed[1], db, save, room)
     if not left_op or not right_op:
-        return "You don't have both of those to hand."
+        return "You don't have both of those to hand.", None
     if left_op == right_op:
-        return "You can't combine that with itself."
+        return "You can't combine that with itself.", None
     combo = COMBINATIONS.get(frozenset({left_op, right_op}))
     if not combo:
-        return "Nothing happens when you combine those."
+        return "Nothing happens when you combine those.", None
     requires_flag = combo.get("requires_flag")
     if requires_flag and not has_flag(db, save, requires_flag):
-        return combo.get("not_ready_message", "Nothing useful happens yet.")
+        return combo.get("not_ready_message", "Nothing useful happens yet."), None
 
     spawns_item_id = combo.get("spawns_item_id")
     already_spawned = spawns_item_id and (
@@ -284,7 +285,7 @@ def handle_combine(db: Session, save: Save, room: dict, rest_words) -> str:
     already_flagged = combo.get("sets_flag") and has_flag(db, save, combo["sets_flag"])
     already_promoted = combo.get("promotes_item_id") and is_evidence(db, save, combo["promotes_item_id"])
     if already_flagged or already_promoted or already_spawned:
-        return combo["event_message"]
+        return combo["event_message"], None
 
     if combo["type"] == "consume":
         for operand in (left_op, right_op):
@@ -293,6 +294,7 @@ def handle_combine(db: Session, save: Save, room: dict, rest_words) -> str:
         db.add(SaveInventory(
             save_id=save.id, item_id=combo["result_item_id"], status="held", acquired_at_turn=save.turn_count,
         ))
+        highlight = {"kind": "combine", "text": ITEMS[combo["result_item_id"]]["name"]}
     else:  # unlock: originals stay, since real clues shouldn't vanish when used
         if combo.get("sets_flag"):
             db.add(SaveFlag(save_id=save.id, flag_key=combo["sets_flag"], set_at_turn=save.turn_count))
@@ -307,7 +309,15 @@ def handle_combine(db: Session, save: Save, room: dict, rest_words) -> str:
             db.add(SaveEvidenceLog(
                 save_id=save.id, evidence_item_id=combo["promotes_item_id"], collected_at_turn=save.turn_count,
             ))
-    return combo["event_message"]
+        # Evidence promotion is the bigger beat, so it wins the highlight over
+        # a merely-spawned item on the rare combo that could do both.
+        if combo.get("promotes_item_id"):
+            highlight = {"kind": "evidence", "text": ITEMS[combo["promotes_item_id"]]["name"]}
+        elif combo.get("spawns_item_id"):
+            highlight = {"kind": "combine", "text": ITEMS[combo["spawns_item_id"]]["name"]}
+        else:
+            highlight = None
+    return combo["event_message"], highlight
 
 
 def has_visited(db: Session, save: Save, room_id: str) -> bool:
@@ -398,16 +408,17 @@ def post_action(body: ActionRequest, db: Session = Depends(get_db)):
     # scripted walkthrough overlay — "places"/"inventory"/"evidence" below and
     # the meta commands above are the fallback net, not the primary onboarding.
     words = text.split()
+    highlight = None
 
     if words and words[0] in COMBINE_VERBS:
-        message = handle_combine(db, save, room, words[1:])
+        message, highlight = handle_combine(db, save, room, words[1:])
     else:
         verb, target = parse_command(text)
 
         if verb in LOOK_VERBS:
             message = handle_examine(db, save, room, target)
         elif verb in TAKE_VERBS:
-            message = handle_take(db, save, room, target)
+            message, highlight = handle_take(db, save, room, target)
         elif verb in GO_VERBS:
             message = move_with_narration(db, save, room, target) if target else "Go where?"
         elif (
@@ -432,7 +443,7 @@ def post_action(body: ActionRequest, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(save)
 
-    return {"message": message, "room": room_payload(save), "turn_count": save.turn_count}
+    return {"message": message, "room": room_payload(save), "turn_count": save.turn_count, "highlight": highlight}
 
 
 app.mount("/", StaticFiles(directory=FRONTEND_DIR, html=True), name="frontend")

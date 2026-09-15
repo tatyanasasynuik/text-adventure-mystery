@@ -47,9 +47,46 @@ header h1 {
   margin: 0 0 0.75rem;
 }
 
-#log p.command {
+#log .room-tag {
+  color: #7d7a72;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+#log .sep {
+  color: #55524c;
+}
+
+#log p.command .log-text {
   font-family: "Courier New", Courier, monospace;
   color: #ff8c00; /* darkorange — ~6.7:1 contrast on #232329, clears WCAG AA */
+}
+
+/* Inventory-change cues: a separate line rather than an inline highlight,
+   since combine flavor text often doesn't literally name the item (e.g.
+   "It lifts clean." for fingerprint_lifted) — inline highlighting would
+   silently miss those. Colors are from the colorblind-safe Okabe-Ito
+   palette (take=yellow, combine=reddish-purple); evidence is a deeper
+   violet step from combine's purple for the "bigger beat" of a promotion.
+   Each kind also gets its own glyph/label in game.js so the cue doesn't
+   rely on color alone. */
+#log p.event-badge {
+  margin: -0.4rem 0 0.75rem;
+  font-size: 0.85rem;
+  font-weight: bold;
+}
+
+#log p.event-badge.kind-take {
+  color: #f0e442; /* ~11.8:1 contrast on #232329 */
+}
+
+#log p.event-badge.kind-combine {
+  color: #cc79a7; /* ~5.1:1 contrast on #232329 */
+}
+
+#log p.event-badge.kind-evidence {
+  color: #b980d6; /* ~5.3:1 contrast on #232329 */
 }
 
 #input-row {
